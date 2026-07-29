@@ -1,0 +1,104 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        Int            @id @default(autoincrement())
+  name      String
+  email     String         @unique
+  phone     String?
+  password  String
+  role      String         @default("customer")
+  orders    Order[]
+  cart      CartItem[]
+  wishlist  WishlistItem[]
+  createdAt DateTime       @default(now())
+}
+
+model Category {
+  id       Int       @id @default(autoincrement())
+  name     String
+  slug     String    @unique
+  icon     String?
+  products Product[]
+}
+
+model Product {
+  id            Int            @id @default(autoincrement())
+  name          String
+  slug          String         @unique
+  price         Decimal
+  discount      Decimal?       @default(0)
+  stock         Int            @default(0)
+  images        String[]
+  description   String?
+  codAllowed    Boolean        @default(true)
+  categoryId    Int
+  category      Category       @relation(fields: [categoryId], references: [id])
+  cartItems     CartItem[]
+  wishlistItems WishlistItem[]
+  orderItems    OrderItem[]
+  reviews       Review[]
+  createdAt     DateTime       @default(now())
+}
+
+model CartItem {
+  id        Int     @id @default(autoincrement())
+  userId    Int
+  user      User    @relation(fields: [userId], references: [id])
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int     @default(1)
+
+  @@unique([userId, productId])
+}
+
+model WishlistItem {
+  id        Int     @id @default(autoincrement())
+  userId    Int
+  user      User    @relation(fields: [userId], references: [id])
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+
+  @@unique([userId, productId])
+}
+
+model Order {
+  id            Int         @id @default(autoincrement())
+  userId        Int
+  user          User        @relation(fields: [userId], references: [id])
+  items         OrderItem[]
+  total         Decimal
+  paymentMethod String
+  paymentStatus String      @default("pending")
+  bkashTrxId    String?
+  bkashSenderNo String?
+  orderStatus   String      @default("processing")
+  address       String
+  phone         String
+  createdAt     DateTime    @default(now())
+}
+
+model OrderItem {
+  id        Int     @id @default(autoincrement())
+  orderId   Int
+  order     Order   @relation(fields: [orderId], references: [id])
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  price     Decimal
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id])
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+}
